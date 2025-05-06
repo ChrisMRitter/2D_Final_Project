@@ -191,7 +191,7 @@ int main() {
 // Press-Enter-To-Start screen
 // ------------------------------------------------------------------------
 void startScreen(sf::RenderWindow& window, const sf::Font& font) {
-    sf::Text prompt("Press Enter to Start\nPress P to Pause\nPress Esc to Quit\nPress A and D to Move\nPress Space to Shoot", font, 50);
+    sf::Text prompt("Press Enter to Start\nPress P to Pause\nPress Esc to Quit\nPress A and D to Move\nPress Space to Shoot\nUse Mouse to Aim", font, 50);
     prompt.setFillColor(sf::Color::White);
     prompt.setPosition(window.getSize().x / 2.f - prompt.getGlobalBounds().width / 2.f,
         window.getSize().y / 2.f - prompt.getGlobalBounds().height / 2.f);
