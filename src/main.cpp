@@ -1,5 +1,4 @@
-// main.cpp
-// Contains the main game loop and handles all repeating logic
+// src/main.cpp
 #include "enemyManager.h"
 #include "laser.h"
 #include "player.h"
@@ -9,253 +8,171 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
-#include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
-// Constants for window size
-static const float VIEW_WIDTH = 800.f;
+static const float VIEW_WIDTH  = 800.f;
 static const float VIEW_HEIGHT = 600.f;
 
-// Forward declarations
-void startScreen(sf::RenderWindow &window, const sf::Font &font);
-void checkPlayerHealth(Player &player, sf::RenderWindow &window,
-                       const sf::Font &font);
-void handleEvents(sf::RenderWindow &window);
+// Helper: load full texture or a sub-rect
+std::shared_ptr<sf::Texture> loadTexture(
+    const std::string& path,
+    const sf::IntRect& rect = sf::IntRect()
+) {
+    auto tex = std::make_shared<sf::Texture>();
+    if (rect.width > 0 && rect.height > 0) {
+        if (!tex->loadFromFile(path, rect)) return nullptr;
+    } else {
+        if (!tex->loadFromFile(path)) return nullptr;
+    }
+    return tex;
+}
+
+// Show start screen: waits for Enter
+void startScreen(sf::RenderWindow& window, const sf::Font& font) {
+    sf::Text prompt("Press Enter to Start\nPress P to Pause", font, 50);
+    prompt.setFillColor(sf::Color::White);
+    // center text
+    sf::FloatRect bounds = prompt.getLocalBounds();
+    prompt.setOrigin(bounds.width/2.f, bounds.height/2.f);
+    prompt.setPosition(window.getView().getCenter());
+    while (window.isOpen()) {
+        sf::Event ev;
+        while (window.pollEvent(ev)) {
+            if (ev.type == sf::Event::Closed) {
+                window.close();
+                return;
+            } else if (ev.type == sf::Event::KeyPressed && ev.key.code == sf::Keyboard::Enter) {
+                return;
+            }
+        }
+        window.clear();
+        window.draw(prompt);
+        window.display();
+    }
+}
+
+// Display Game Over and wait for Escape
+void gameOverScreen(sf::RenderWindow& window, const sf::Font& font) {
+    sf::Text over("Game Over\nPress Esc to Quit", font, 50);
+    over.setFillColor(sf::Color::Red);
+    sf::FloatRect bounds = over.getLocalBounds();
+    over.setOrigin(bounds.width/2.f, bounds.height/2.f);
+    over.setPosition(window.getView().getCenter());
+    while (window.isOpen()) {
+        sf::Event ev;
+        while (window.pollEvent(ev)) {
+            if (ev.type == sf::Event::KeyPressed && ev.key.code == sf::Keyboard::Escape)
+                return;
+            if (ev.type == sf::Event::Closed)
+                return;
+        }
+        window.clear();
+        window.draw(over);
+        window.display();
+    }
+}
 
 int main() {
-  // Create the main window
-  sf::RenderWindow window(sf::VideoMode(VIEW_WIDTH, VIEW_HEIGHT),
-                          "Space Defender");
-  window.setFramerateLimit(60);
+    sf::RenderWindow window(sf::VideoMode((int)VIEW_WIDTH, (int)VIEW_HEIGHT), "Space Defender");
+    window.setFramerateLimit(60);
 
-  // Load sprite sheet and crop two textures
-  sf::Texture sheet;
-  if (!sheet.loadFromFile("./Assets/Sprites/spaceship_spritesheet.png"))
-    return -1;
-  sf::Image sheetImg = sheet.copyToImage();
-  sf::Texture chaserTex, turretTex;
-  chaserTex.loadFromImage(sheetImg, sf::IntRect(0, 0, 64, 64));
-  turretTex.loadFromImage(sheetImg, sf::IntRect(0, 256, 64, 64));
-  auto chaserPtr = std::make_shared<sf::Texture>(chaserTex);
-  auto turretPtr = std::make_shared<sf::Texture>(turretTex);
+    // Load font
+    sf::Font font;
+    if (!font.loadFromFile("./Assets/Fonts/VeniteAdoremus-rgRBA.ttf")) return -1;
+    textManager textMgr;
+    textMgr.loadFont("./Assets/Fonts/VeniteAdoremus-rgRBA.ttf");
 
-  // Player and laser container
-  Player player("./Assets/Sprites/hero spaceship.png", 300.f);
-  std::vector<Laser> lasers;
+    // Show start screen
+    startScreen(window, font);
 
-  // Load font for HUD and start screen
-  sf::Font font;
-  if (!font.loadFromFile("./Assets/Fonts/VeniteAdoremus-rgRBA.ttf"))
-    return -1;
-  textManager textMgr;
-  textMgr.loadFont("./Assets/Fonts/VeniteAdoremus-rgRBA.ttf");
+    // Initialize player & lasers
+    Player player("./Assets/Sprites/test_sprites/PixelSpaceRage/128px/PlayerBlue_Frame_01_png_processed.png", 300.f);
+    std::vector<Laser> lasers;
 
-  // Show start screen
-  startScreen(window, font);
+    // Load enemy textures
+    auto chaserPtr = loadTexture("./Assets/Sprites/test_sprites/enemy_green.png");
+    auto turretPtr = loadTexture("./Assets/Sprites/test_sprites/enemy_red.png");
+    auto mothPtr   = loadTexture("./Assets/Sprites/test_sprites/final_boss.png");
+    if (!chaserPtr || !turretPtr || !mothPtr) return -1;
 
-  // Configure enemy managers with lower spawn rate
-  EnemyManager chasers;
-  chasers.configure(chaserPtr, 12, 2, 2.5f, 120.f, 1.0f);
-  EnemyManager turrets;
-  turrets.configure(turretPtr, 6, 10, 8.0f, 30.f, 5.0f);
+    // Configure managers
+    EnemyManager chasers, turrets, boss;
+    chasers.configure(chaserPtr, 12, 2, 2.5f, 120.f, 0.1f);
+    turrets.configure(turretPtr, 6, 10, 8.f, 30.f, 0.3f);
+    boss.configure(mothPtr, 1, 20, 0.f, 15.f, 1.f);
 
-  // Load and scale background
-  sf::Texture bgTex;
-  if (!bgTex.loadFromFile("./Assets/Sprites/Planets and Space.png"))
-    std::cerr << "Failed to load background\n";
-  sf::Sprite background(bgTex);
-  {
-    auto ws = window.getSize();
-    auto ts = bgTex.getSize();
-    background.setScale(ws.x / float(ts.x), ws.y / float(ts.y));
-  }
+    // Load background
+    sf::Texture bg;
+    if (!bg.loadFromFile("./Assets/Sprites/test_sprites/PixelSpaceRage/PixelBackgroundSeamless.png")) return -1;
+    sf::Sprite background(bg);
+    auto ws = window.getSize(); auto ts = bg.getSize();
+    background.setScale(ws.x/float(ts.x), ws.y/float(ts.y));
 
-  // Play background music
-  sf::Music bgMusic;
-  if (bgMusic.openFromFile("./Assets/Sound/bgmusic.mp3")) {
-    bgMusic.setLoop(true);
-    bgMusic.setVolume(50.f);
-    bgMusic.play();
-  }
-
-  // Set up pause menu
-  bool isPaused = false;
-  int selectedItem = 0;
-  std::vector<std::string> menuItems = {"Resume", "Quit"};
-  std::vector<sf::Text> menuTexts;
-
-  for (size_t i = 0; i < menuItems.size(); ++i) {
-    sf::Text text(menuItems[i], font, 36);
-    text.setPosition(300, 200 + i * 60);
-    menuTexts.push_back(text);
-  }
-
-  // Main loop
-  sf::Clock clock;
-  while (window.isOpen()) {
-    // Implement pause menu
-    sf::Event event;
-    while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed)
-        window.close();
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::P) {
-          isPaused = !isPaused;
-        }
-
-        if (isPaused) {
-          if (event.key.code == sf::Keyboard::Up) {
-            selectedItem =
-                (selectedItem - 1 + menuItems.size()) % menuItems.size();
-          } else if (event.key.code == sf::Keyboard::Down) {
-            selectedItem = (selectedItem + 1) % menuItems.size();
-          } else if (event.key.code == sf::Keyboard::Enter) {
-            if (menuItems[selectedItem] == "Resume") {
-              isPaused = false;
-            }
-            {
-              window.close();
-            }
-          }
-        }
-      }
+    // Music
+    sf::Music music;
+    if (music.openFromFile("./Assets/Sound/bgmusic.mp3")) {
+        music.setLoop(true); music.setVolume(50.f); music.play();
     }
 
-    window.clear();
+    bool paused = false;
+    sf::Text pauseText("Paused - Press P to Resume", font, 24);
+    pauseText.setFillColor(sf::Color::White);
+    auto ptb = pauseText.getLocalBounds();
+    pauseText.setOrigin(ptb.width/2.f, ptb.height/2.f);
+    pauseText.setPosition(window.getView().getCenter());
 
-    if (isPaused) {
-      for (size_t i = 0; i < menuTexts.size(); ++i) {
-        if (i == selectedItem)
-          menuTexts[i].setFillColor(sf::Color::Red);
-        else
-          menuTexts[i].setFillColor(sf::Color::White);
-        window.draw(menuTexts[i]);
-      }
-    } else {
-      // Handle events and check health
-      handleEvents(window);
-      checkPlayerHealth(player, window, font);
+    sf::Clock clock;
 
-      // Delta time
-      float dt = clock.restart().asSeconds();
-      if (dt > 0.1f)
-        dt = 0.1f;
-
-      // Update player (including firing)
-      sf::Vector2f mousePos =
-          window.mapPixelToCoords(sf::Mouse::getPosition(window));
-      player.update(dt, lasers, mousePos);
-
-      // Update lasers
-      for (auto &laser : lasers)
-        laser.update(dt);
-
-      // Update enemies (spawn from top, move)
-      sf::Vector2f ppos = player.getPosition();
-      chasers.update(dt, ppos);
-      turrets.update(dt, ppos);
-
-      // Laser-enemy collisions
-      int chaserKills = chasers.handleLaserCollisions(lasers);
-      textMgr.addScore(chaserKills * 100);
-      int turretKills = turrets.handleLaserCollisions(lasers);
-      textMgr.addScore(turretKills * 500);
-
-      // Enemy-player collisions (damage values)
-      chasers.handlePlayerCollisions(player, 1);
-      turrets.handlePlayerCollisions(player, 5);
-
-      // Update HUD
-      sf::Vector2f vc = window.getView().getCenter();
-      sf::Vector2f vs = window.getView().getSize();
-      textMgr.updatePlayerHealth(player.getHealth(), vc, vs);
-      textMgr.updateScoreDisplay(vc, vs);
-    }
-
-    // Draw everything
-    window.clear();
-    window.draw(background);
-    chasers.draw(window);
-    turrets.draw(window);
-    player.draw(window);
-    for (auto &laser : lasers)
-      laser.draw(window);
-    textMgr.draw(window);
-    window.display();
-  }
-
-  return 0;
-}
-
-// ------------------------------------------------------------------------
-// Press-Enter-To-Start screen
-// ------------------------------------------------------------------------
-void startScreen(sf::RenderWindow &window, const sf::Font &font) {
-  sf::Text prompt("Press Enter to Start\nPress P to Pause", font, 50);
-  prompt.setFillColor(sf::Color::White);
-  prompt.setPosition(
-      window.getSize().x / 2.f - prompt.getGlobalBounds().width / 2.f,
-      window.getSize().y / 2.f - prompt.getGlobalBounds().height / 2.f);
-  while (window.isOpen()) {
-    sf::Event ev;
-    while (window.pollEvent(ev)) {
-      if (ev.type == sf::Event::Closed)
-        window.close();
-      else if (ev.type == sf::Event::KeyPressed &&
-               ev.key.code == sf::Keyboard::Enter)
-        return;
-    }
-    window.clear();
-    window.draw(prompt);
-    window.display();
-  }
-}
-
-// ------------------------------------------------------------------------
-// Check player health and show Game Over
-// ------------------------------------------------------------------------
-void checkPlayerHealth(Player &player, sf::RenderWindow &window,
-                       const sf::Font &font) {
-  if (player.getHealth() <= 0) {
-    sf::Text gameOver("Game Over\nPress Esc to Quit", font, 50);
-    gameOver.setFillColor(sf::Color::Red);
-    gameOver.setPosition(
-        window.getSize().x / 2.f - gameOver.getGlobalBounds().width / 2.f,
-        window.getSize().y / 2.f - gameOver.getGlobalBounds().height / 2.f);
     while (window.isOpen()) {
-      sf::Event ev;
-      while (window.pollEvent(ev)) {
-        if (ev.type == sf::Event::Closed)
-          window.close();
-        else if (ev.type == sf::Event::KeyPressed &&
-                 ev.key.code == sf::Keyboard::Escape)
-          window.close();
-      }
-      window.clear();
-      window.draw(gameOver);
-      window.display();
+        sf::Event ev;
+        while (window.pollEvent(ev)) {
+            if (ev.type == sf::Event::Closed) {
+                window.close(); break;
+            } else if (ev.type == sf::Event::KeyPressed && ev.key.code == sf::Keyboard::P) {
+                paused = !paused;
+                if (paused) window.setView(window.getDefaultView());
+            }
+        }
+        if (paused) {
+            window.clear(); window.draw(pauseText); window.display();
+            continue;
+        }
+        // Game over?
+        if (player.getHealth() <= 0) { gameOverScreen(window, font); break; }
+        float dt = clock.restart().asSeconds(); if (dt>0.1f) dt=0.1f;
+
+        // Update player & lasers
+        player.update(dt, lasers, window.mapPixelToCoords(sf::Mouse::getPosition(window)));
+        for (auto& l : lasers) l.update(dt);
+
+        int score = textMgr.getScore();
+        bool spawn = score < 5000; bool bossOK = score >= 5000;
+        auto pos = player.getPosition();
+        chasers.update(dt, pos, spawn);
+        turrets.update(dt, pos, spawn);
+        boss.update(dt, pos, bossOK);
+
+        int ck = chasers.handleLaserCollisions(lasers);
+        int tk = turrets.handleLaserCollisions(lasers);
+        int bk = boss.handleLaserCollisions(lasers);
+        textMgr.addScore(ck*100 + tk*500 + bk*1000);
+        chasers.handlePlayerCollisions(player,1);
+        turrets.handlePlayerCollisions(player,5);
+        boss.handlePlayerCollisions(player,10);
+
+        window.clear(); window.draw(background);
+        chasers.draw(window); turrets.draw(window);
+        player.draw(window); for(auto& l:lasers) l.draw(window);
+        boss.draw(window);
+        // HUD
+        auto vc = window.getView().getCenter(); auto vs = window.getView().getSize();
+        textMgr.updatePlayerHealth(player.getHealth(),vc,vs);
+        textMgr.updateScoreDisplay(vc,vs);
+        textMgr.draw(window);
+        window.display();
     }
-  }
+    return 0;
 }
 
-// ------------------------------------------------------------------------
-// Basic event handling
-// ------------------------------------------------------------------------
-void handleEvents(sf::RenderWindow &window) {
-  sf::Event ev;
-  while (window.pollEvent(ev)) {
-    if (ev.type == sf::Event::Closed)
-      window.close();
-    else if (ev.type == sf::Event::Resized) {
-      float winA = float(ev.size.width) / ev.size.height;
-      float viewA = VIEW_WIDTH / VIEW_HEIGHT;
-      sf::View v = window.getView();
-      if (winA > viewA)
-        v.setSize(VIEW_HEIGHT * winA, VIEW_HEIGHT);
-      else
-        v.setSize(VIEW_WIDTH, VIEW_WIDTH / winA);
-      window.setView(v);
-    }
-  }
-}

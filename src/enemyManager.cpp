@@ -1,96 +1,75 @@
-// enemyManager.cpp
-// enemyManager implementation
 #include "enemyManager.h"
 #include "hitbox.h"
 #include <algorithm>
 #include <cstdlib>
 
 EnemyManager::EnemyManager()
-    : rng(std::random_device{}()), hpDist(baseHealth, baseHealth),
-      speedDist(baseSpeed, baseSpeed) {}
+    : rng(std::random_device{}()),
+      hpDist(baseHealth, baseHealth),
+      speedDist(baseSpeed, baseSpeed),
+      enemyScale(1.f),
+      spawnCooldown(2.f),
+      maxEnemies(10),
+      baseHealth(3),
+      baseSpeed(60.f),
+      spawnTimer(0.f)
+{}
 
-// Function to configure the enemy manager, letting us change how we are creating enemies as need be
-void EnemyManager::configure(std::shared_ptr<sf::Texture> tex, int maxEn,
-                             int health, float cooldown, float speed,
-                             float scale) {
-  enemyTexture = std::move(tex);
-  enemyScale = scale;
-
-  maxEnemies = maxEn;
-  spawnCooldown = cooldown;
-  baseHealth = health;
-  baseSpeed = speed;
-
-    // reset distributions to fixed values
-  hpDist = std::uniform_int_distribution<>(health, health);
-  speedDist = std::uniform_real_distribution<float>(speed, speed);
+void EnemyManager::configure(std::shared_ptr<sf::Texture> tex, int maxEn, int health, float cooldown, float speed, float scale) {
+    enemyTexture = tex;
+    maxEnemies = maxEn;
+    baseHealth = health;
+    spawnCooldown = cooldown;
+    baseSpeed = speed;
+    enemyScale = scale;
+    hpDist = std::uniform_int_distribution<>(health, health);
+    speedDist = std::uniform_real_distribution<float>(speed, speed);
 }
 
-// Function to move and remove enemies
-void EnemyManager::update(float dt, const sf::Vector2f &playerPos) {
-  spawnTimer += dt;
-    // Spawn logic
-  if (spawnTimer >= spawnCooldown && enemies.size() < (size_t)maxEnemies) {
-    spawnEnemy(playerPos);
-    spawnTimer = 0.f;
-  }
-
-    // Update all enemies
-  for (auto &e : enemies)
-    e.update(dt, playerPos);
-
-    // Remove enemies that are marked as dead
-  enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
-                               [](const Enemy &e) { return !e.isAlive(); }),
-                enemies.end());
-}
-
-// Function to draw all enemies
-void EnemyManager::draw(sf::RenderWindow &window) {
-  for (auto &e : enemies)
-    e.draw(window);
-}
-
-// Function to handle collisions between lasers and enemies
-int EnemyManager::handleLaserCollisions(std::vector<Laser> &lasers) {
-  int kills = 0;
-  for (auto it = lasers.begin(); it != lasers.end();) {
-    bool hit = false;
-    for (auto &e : enemies) {
-        // For sprite to sprite collision, just use getGlobalBounds() for both parts
-      if (it->getGlobalBounds().intersects(e.getGlobalBounds())) {
-        int remaining = e.takeDamage(); // reduce the enemy's health
-        if (remaining <= 0)
-          ++kills;
-        hit = true;
-        break;
-      }
+void EnemyManager::update(float dt, const sf::Vector2f& playerPos, bool allowSpawn) {
+    spawnTimer += dt;
+    if (allowSpawn && spawnTimer >= spawnCooldown && enemies.size() < static_cast<size_t>(maxEnemies)) {
+        spawnEnemy(playerPos);
+        spawnTimer = 0.f;
     }
-    if (hit)
-      it = lasers.erase(it);
-    else
-      ++it;
-  }
-  return kills;
+    for (auto& e : enemies) e.update(dt, playerPos);
+    enemies.erase(
+        std::remove_if(enemies.begin(), enemies.end(), [](const Enemy& e){ return !e.isAlive(); }),
+        enemies.end()
+    );
 }
 
-// Function to check for collisions between the player and enemies
-void EnemyManager::handlePlayerCollisions(Player &player, int damage) {
-  for (auto &e : enemies) {
-    if (e.getGlobalBounds().intersects(player.getHitbox().getBounds()))
-      player.takeDamage(damage);
-  }
+void EnemyManager::draw(sf::RenderWindow& window) {
+    for (auto& e : enemies) e.draw(window);
 }
 
-// Function to spawn an enemy at a somewhat random location around the player
-void EnemyManager::spawnEnemy(const sf::Vector2f &) {
-    // Only from top of screen (hardcoded width=800px)
-  float buffer = 50.f;
-  float x = static_cast<float>(std::rand() % 800);
-  sf::Vector2f pos(x, -buffer);
+int EnemyManager::handleLaserCollisions(std::vector<Laser>& lasers) {
+    int kills = 0;
+    for (auto it = lasers.begin(); it != lasers.end();) {
+        bool hit = false;
+        for (auto& e : enemies) {
+            if (it->getGlobalBounds().intersects(e.getGlobalBounds())) {
+                if (e.takeDamage() <= 0) ++kills;
+                hit = true;
+                break;
+            }
+        }
+        if (hit) it = lasers.erase(it);
+        else ++it;
+    }
+    return kills;
+}
 
-    // fixed attributes
-  int hp = hpDist(rng);
-  float spd = speedDist(rng);
-  enemies.emplace_back(pos.x, pos.y, spd, hp, enemyTexture, enemyScale);
+void EnemyManager::handlePlayerCollisions(Player& player, int damage) {
+    for (auto& e : enemies) {
+        if (e.getGlobalBounds().intersects(player.getHitbox().getBounds()))
+            player.takeDamage(damage);
+    }
+}
+
+void EnemyManager::spawnEnemy(const sf::Vector2f& playerPos) {
+    float x = static_cast<float>(std::rand() % 800);
+    int hp = hpDist(rng);
+    float spd = speedDist(rng);
+    enemies.emplace_back(x, -50.f, spd, hp, enemyTexture, enemyScale);
 }
