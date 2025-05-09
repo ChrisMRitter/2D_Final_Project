@@ -4,18 +4,36 @@ AnimatedBackground::AnimatedBackground(std::shared_ptr<sf::Texture> sheet, float
     : frameTime(1.f / fps)
 {
     sprite.setTexture(*sheet);
-    auto sz = sheet->getSize();
-    int h = sz.y;
-    int cols = sz.x / h;
+    auto sz   = sheet->getSize();
+    int  h    = sz.y;
+    int  cols = sz.x / h;
     frames.reserve(cols);
-    for (int i = 0; i < cols; ++i) {
+    for (int i = 0; i < cols; ++i)
         frames.emplace_back(i * h, 0, h, h);
-    }
+    sprite.setTextureRect(frames[0]);
+}
+
+void AnimatedBackground::loadSheet(std::shared_ptr<sf::Texture> sheet, float fps) {
+    // reset animation state
+    frameTime    = 1.f / fps;
+    elapsed      = 0.f;
+    currentFrame = 0;
+    frames.clear();
+
+    // assign new texture and rebuild frames
+    sprite.setTexture(*sheet);
+    auto sz   = sheet->getSize();
+    int  h    = sz.y;
+    int  cols = sz.x / h;
+    frames.reserve(cols);
+    for (int i = 0; i < cols; ++i)
+        frames.emplace_back(i * h, 0, h, h);
     sprite.setTextureRect(frames[0]);
 }
 
 void AnimatedBackground::setScaleFactor(float scale) {
     scaleFactor = scale;
+    sprite.setScale(scaleFactor, scaleFactor);
 }
 
 void AnimatedBackground::update(float dt) {
@@ -28,24 +46,8 @@ void AnimatedBackground::update(float dt) {
 }
 
 void AnimatedBackground::draw(sf::RenderWindow& window) {
-    // use the current view to center
-    sf::View view = window.getView();
-    sf::Vector2f viewSize   = view.getSize();
-    sf::Vector2f viewCenter = view.getCenter();
-
-    // compute scale to fill view * scaleFactor
-    auto rect     = sprite.getTextureRect();
-    float sx = viewSize.x / rect.width  * scaleFactor;
-    float sy = viewSize.y / rect.height * scaleFactor;
-    sprite.setScale(sx, sy);
-
-    // center sprite in view
-    float w_scaled = rect.width  * sx;
-    float h_scaled = rect.height * sy;
-    float x = viewCenter.x - w_scaled * 0.5f;
-    float y = viewCenter.y - h_scaled * 0.5f;
-    sprite.setPosition(x, y);
-
+    // make sure the sprite covers the whole view;
+    // if you want it centered, you could call:
+    // sprite.setPosition(0,0);
     window.draw(sprite);
 }
-

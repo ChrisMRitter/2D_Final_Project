@@ -12,11 +12,17 @@
 class EnemyManager {
 public:
     EnemyManager();
-    void configure(std::shared_ptr<sf::Texture> tex, int maxEn, int health, float cooldown, float speed, float scale = 1.f);
-    void update(float dt, const sf::Vector2f& playerPos, bool allowSpawn = true);
+    void configure(std::shared_ptr<sf::Texture> tex,
+                   int maxEn, int health, float cooldown,
+                   float speed, float scale = 1.f);
+    void update(float dt, const sf::Vector2f& playerPos,
+                bool allowSpawn = true);
     void draw(sf::RenderWindow& window);
     int handleLaserCollisions(std::vector<Laser>& lasers);
     void handlePlayerCollisions(Player& player, int damage);
+
+    // Get current alive enemy count
+    int getAliveCount() const;
 
 private:
     std::shared_ptr<sf::Texture> enemyTexture;
