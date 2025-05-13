@@ -33,7 +33,7 @@ static std::shared_ptr<sf::Texture> loadTexture(
 static void startScreen(sf::RenderWindow& window,
                         const sf::Font& font)
 {
-    sf::Text prompt("Press Enter to Start", font, 50);
+    sf::Text prompt("Press Enter to Start\nPress P to Pause\nPress Esc to Quit\nPress A and D to Move\nPress Space to Shoot\nUse Mouse to Aim", font, 50); // edit this line
     prompt.setFillColor(sf::Color::White);
     auto b = prompt.getLocalBounds();
     prompt.setOrigin(b.width/2.f, b.height/2.f);
