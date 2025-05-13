@@ -10,6 +10,7 @@
 #include "animatedBackground.h"
 #include "levelManager.h"
 #include "gameconstants.h"
+#include "asteroid.h" // TODO: Asteroid Code
 
 #include <memory>
 #include <vector>
@@ -35,7 +36,7 @@ static std::shared_ptr<sf::Texture> loadTexture(
 static void startScreen(sf::RenderWindow& window,
                         const sf::Font& font)
 {
-    sf::Text prompt("Press Enter to Start", font, 50);
+    sf::Text prompt("Press Enter to Start\nPress P to Pause\nPress Esc to Quit\nPress A and D to Move\nPress Space to Shoot\nUse Mouse to Aim", font, 50);
     prompt.setFillColor(sf::Color::White);
     auto b = prompt.getLocalBounds();
     prompt.setOrigin(b.width/2.f, b.height/2.f);
@@ -120,6 +121,10 @@ int main() {
     AnimatedBackground animBg(bgSheet, 6.f);
     animBg.setScaleFactor(0.5f);
 
+    // Load the texture for the asteroid sprite
+    auto asteroidTex = loadTexture(./Assets/Sprites/test_sprites/PixelSpaceRage/128px/Asteroid01_png_processed.png");
+    if (!asteroidTex) return -1;
+    
     LevelManager lvlMgr(
         &textMgr, &animBg, &player, greenEnemyTex, redEnemyTex, mothershipTex);
 
