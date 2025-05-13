@@ -95,7 +95,6 @@ int main() {
 
     startScreen(window, font);
 
-    // TODO: Asteroid Code
     Player player(
         "./Assets/Sprites/test_sprites/PixelSpaceRage/128px/PlayerBlue_Frame_01_png_processed.png",
         600.f);
@@ -111,7 +110,7 @@ int main() {
     AnimatedBackground animBg(bgSheet, 6.f);
     animBg.setScaleFactor(0.5f);
 
-    // Load the texture fore the asteroid sprite
+    // Load the texture for the asteroid sprite
     auto asteroidTex = loadTexture(./Assets/Sprites/test_sprites/PixelSpaceRage/128px/Asteroid01_png_processed.png");
     if (!asteroidTex) return -1;
     
