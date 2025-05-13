@@ -32,6 +32,7 @@ void LevelManager::loadLevel(int levelNumber) {
   player->resetLaserCooldown();
 
   // In LevelManager::loadLevel
+
 if (levelNumber == 2) {
   player->setHealth(15); // More health for Level 2
 }
@@ -108,8 +109,8 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
       if (!newBg->loadFromFile(bgPath)) {
         std::cerr << "Failed to load Level " << (currentLevel + 1) << " background\n";
       } else {
-        bg->loadSheet(newBg, /*fps=*/6.f);
-        bg->setScaleFactor(0.5f);
+        bg->loadSheet(newBg, /*fps=*/60.f);
+        bg->setScaleFactor(0.3f);
       }
       loadLevel(currentLevel + 1);
     }

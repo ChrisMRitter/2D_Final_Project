@@ -1,4 +1,5 @@
 #include "animatedBackground.h"
+#include <iostream>
 
 AnimatedBackground::AnimatedBackground(std::shared_ptr<sf::Texture> sheet, float fps)
     : frameTime(1.f / fps)
@@ -45,9 +46,30 @@ void AnimatedBackground::update(float dt) {
     }
 }
 
-void AnimatedBackground::draw(sf::RenderWindow& window) {
-    // make sure the sprite covers the whole view;
-    // if you want it centered, you could call:
-    // sprite.setPosition(0,0);
+void AnimatedBackground::draw(sf::RenderWindow &window) {
+    // Get the current view size
+    sf::Vector2f viewSize = window.getView().getSize();
+    
+    // Position the sprite to cover the entire view
+    sprite.setPosition(0, 0);
+    
+    // Calculate the scale needed to cover the entire view
+    auto spriteSize = sprite.getLocalBounds();
+    if (spriteSize.width > 0 && spriteSize.height > 0) {
+      float scaleX = viewSize.x / spriteSize.width;
+      float scaleY = viewSize.y / spriteSize.height;
+      
+      // Use the larger scale to ensure full coverage but multiply by scaleFactor for adjustment
+      float baseScale = std::max(scaleX, scaleY);
+      sprite.setScale(baseScale * scaleFactor, baseScale * scaleFactor);
+    
+    
+    // Debug output
+        std::cout << "Applying scale: " << (baseScale * scaleFactor) 
+        << " (baseScale=" << baseScale 
+        << ", scaleFactor=" << scaleFactor << ")" << std::endl;
+}
+
+    // Draw the sprite
     window.draw(sprite);
 }

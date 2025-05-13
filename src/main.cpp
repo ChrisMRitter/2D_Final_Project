@@ -125,7 +125,7 @@ int main() {
 
     sf::Music music;
     if (music.openFromFile(
-        "./Assets/Sound/bgmusic.mp3")) {
+        "./Assets/Sound/Music/Cosmic_Assault.mp3")) {
         music.setLoop(true);
         music.setVolume(50.f);
         music.play();
