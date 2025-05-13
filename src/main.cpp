@@ -122,7 +122,7 @@ int main() {
     animBg.setScaleFactor(0.5f);
 
     // Load the texture for the asteroid sprite
-    auto asteroidTex = loadTexture(./Assets/Sprites/test_sprites/PixelSpaceRage/128px/Asteroid01_png_processed.png");
+    auto asteroidTex = loadTexture("./Assets/Sprites/Asteroid 01_png_processed.png");
     if (!asteroidTex) return -1;
     
     LevelManager lvlMgr(

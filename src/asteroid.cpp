@@ -1,4 +1,4 @@
-#include "Asteroid.h"
+#include "asteroid.h"
 
 // Constructor
 Asteroid::Asteroid(const sf::Texture& texture, const sf::Vector2f& startPos, const sf::Vector2f& velocity)
