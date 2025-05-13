@@ -191,6 +191,8 @@ int main() {
                 player.getHealth(), vc, vs);
             textMgr.updateScoreDisplay(vc, vs);
             textMgr.draw(window);
+            textMgr.updateLaserCooldownDisplay(player.getLaserCooldown(), vc, vs);
+
         }
 
         window.display();

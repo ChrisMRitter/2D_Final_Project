@@ -24,12 +24,15 @@ public:
   void updateScoreDisplay(sf::Vector2f viewCenter, sf::Vector2f viewSize);
   // Function to get the score
   int getScore();
+  // Function to update laser cooldown display
+  void updateLaserCooldownDisplay(float cooldown, sf::Vector2f viewCenter, sf::Vector2f viewSize);
 
 private:
   sf::Font font;
   sf::Text playerHealthText;
   int score = 0;
   sf::Text scoreText;
+  sf::Text laserCooldownText;
 };
 
 #endif

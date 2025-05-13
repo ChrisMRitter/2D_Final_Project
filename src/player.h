@@ -38,6 +38,11 @@ public:
   // Fire a laser in a given direction
   void createLaser(std::vector<Laser> &lasers, sf::Vector2f playerPos,
                    sf::Vector2f fireDirection);
+  void decreaseLaserCooldown(int killCount); //laser cooldown decreases as you kill chasers
+
+  float getLaserCooldown() const; //getter for laser cooldown
+
+  void resetLaserCooldown(); //reset laser cooldown (on level transition)
 
 private:
   Hitbox *hitbox;
@@ -59,6 +64,9 @@ private:
   sf::Sound laserSound;
 
   void handleAnimation(int direction, float dt);
+
+  float minLaserCooldown = 0.1f; //minimum laser cooldown
+  float cooldownReduction = 0.025f; //25ms reduction in cooldown per kill
 };
 
 #endif

@@ -50,4 +50,21 @@ void textManager::updateScoreDisplay(sf::Vector2f viewCenter,
 void textManager::draw(sf::RenderWindow &window) {
   window.draw(playerHealthText);
   window.draw(scoreText);
+  window.draw(laserCooldownText);
+}
+
+// Implementation of the updateLaserCooldownDisplay method
+void textManager::updateLaserCooldownDisplay(float cooldown, sf::Vector2f viewCenter, sf::Vector2f viewSize) {
+  laserCooldownText.setFont(font);
+  laserCooldownText.setCharacterSize(16);
+  laserCooldownText.setFillColor(sf::Color::Yellow);
+  
+  // Format the cooldown to show only 2 decimal places
+  char buffer[32];
+  snprintf(buffer, sizeof(buffer), "Fire Rate: %.2f", 1.0f / cooldown);
+  laserCooldownText.setString(buffer);
+
+  laserCooldownText.setPosition(
+      viewCenter.x - laserCooldownText.getGlobalBounds().width / 2.f,
+      viewCenter.y - viewSize.y / 2.f + 70.f); // below the score
 }

@@ -101,3 +101,27 @@ bool Player::canTakeDamage() const {
 void Player::handleAnimation(int /*direction*/, float /*dt*/) {
   // (no animation changes for now)
 }
+
+// Implementation of the decreaseLaserCooldown method
+void Player::decreaseLaserCooldown(int killCount) {
+  // Calculate total reduction based on kill count
+  float reduction = cooldownReduction * killCount;
+  
+  // Apply the reduction
+  laserCooldown -= reduction;
+  
+  // Ensure cooldown doesn't go below the minimum value
+  if (laserCooldown < minLaserCooldown) {
+    laserCooldown = minLaserCooldown;
+  }
+}
+
+// Implementation of the getLaserCooldown method
+float Player::getLaserCooldown() const {
+  return laserCooldown;
+}
+
+// Implementation of the resetLaserCooldown method
+void Player::resetLaserCooldown() {
+  laserCooldown = 0.5f; // Reset to default value
+}

@@ -20,6 +20,8 @@ void LevelManager::loadLevel(int levelNumber) {
 
   // Reset player to bottom‐center for the new level
   player->setPosition({VIEW_WIDTH / 2.f, VIEW_HEIGHT - 100.f});
+  // Reset the laser cooldown when loading a new level
+  player->resetLaserCooldown();
 }
 
 void LevelManager::setupEnemiesForLevel(int levelNumber) {
@@ -34,12 +36,28 @@ void LevelManager::setupEnemiesForLevel(int levelNumber) {
                    /*scale=*/0.1f);
     enemyManagers.emplace_back(std::move(mgr));
   }
+  //enemyManagers.clear();
+  if (levelNumber == 2) {
+    auto mgr = std::make_unique<EnemyManager>();
+    mgr->configure(chaserTexture,
+      /*maxEn=*/kChasersToSpawn,
+      /*health=*/3,
+      /*cooldown=*/0.5f,
+      /*speed=*/140.f,
+      /*scale=*/0.2f);
+      enemyManagers.emplace_back(std::move(mgr));
+    
+  }
   // TODO: add Level 2 & 3 setups
+
+
 }
 
 void LevelManager::update(float dt, std::vector<Laser> &lasers) {
-  if (currentLevel != 1)
-    return;
+  
+  //if (enemyManagers.empty()) return; //debugging: if no enemy managers, return
+
+  
 
   // safe because we only enter L1 when enemyManagers non‐empty
   auto &mgr = *enemyManagers.front();
@@ -50,8 +68,14 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
     mgr.update(dt, player->getPosition(), allowSpawn);
 
     int kills = mgr.handleLaserCollisions(lasers);
+    // If enemies were killed, decrease the laser cooldown
+    if (kills > 0 && currentLevel > 1) { //static laser Cooldown for level 1
+      player->decreaseLaserCooldown(kills);
+    }
     totalKills += kills;
     textMgr->addScore(kills * 100);
+
+    
 
     mgr.handlePlayerCollisions(*player, /*damage=*/1);
 
