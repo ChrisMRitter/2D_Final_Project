@@ -10,7 +10,7 @@
 #include "animatedBackground.h"
 #include "levelManager.h"
 #include "gameconstants.h"
-#include "asteroid.h"
+#include "asteroid.h" //TODO: Asteroid Code
 
 #include <memory>
 #include <vector>
@@ -95,6 +95,7 @@ int main() {
 
     startScreen(window, font);
 
+    // TODO: Asteroid Code
     Player player(
         "./Assets/Sprites/test_sprites/PixelSpaceRage/128px/PlayerBlue_Frame_01_png_processed.png",
         600.f);
