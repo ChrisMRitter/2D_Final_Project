@@ -12,19 +12,21 @@
 class EnemyManager {
 public:
     EnemyManager();
+    //Need to override some methods for boss fight, so making them virtual
+    virtual ~EnemyManager() = default; //Virtual destructor
     void configure(std::shared_ptr<sf::Texture> tex,
                    int maxEn, int health, float cooldown,
                    float speed, float scale = 1.f);
-    void update(float dt, const sf::Vector2f& playerPos,
+    virtual void update(float dt, const sf::Vector2f& playerPos,
                 bool allowSpawn = true);
-    void draw(sf::RenderWindow& window);
-    int handleLaserCollisions(std::vector<Laser>& lasers);
-    void handlePlayerCollisions(Player& player, int damage);
+    virtual void draw(sf::RenderWindow& window);
+    virtual int handleLaserCollisions(std::vector<Laser>& lasers);
+    virtual void handlePlayerCollisions(Player& player, int damage);
 
     // Get current alive enemy count
     int getAliveCount() const;
 
-private:
+protected:
     std::shared_ptr<sf::Texture> enemyTexture;
     float enemyScale;
     float spawnCooldown;
@@ -36,7 +38,8 @@ private:
     std::uniform_int_distribution<> hpDist;
     std::uniform_real_distribution<float> speedDist;
     std::vector<Enemy> enemies;
-    void spawnEnemy(const sf::Vector2f& playerPos);
+    
+    virtual void spawnEnemy(const sf::Vector2f& playerPos);
 };
 
 #endif

@@ -10,7 +10,7 @@ class Laser {
 public:
   // Constructor: x and y are the starting position, speed is the speed of the
   // laser, and direction is the direction of the laser
-  Laser(float x, float y, float speed, sf::Vector2f direction);
+  Laser(float x, float y, float speed, sf::Vector2f direction, bool isEnemy = false);
   // Function to update the laser position
   void update(float dt);
   // Function to draw the laser
@@ -21,6 +21,7 @@ public:
   bool isOutOfBounds();
   // Function to get the global bounds for collision detection
   sf::FloatRect getGlobalBounds();
+  bool isFromEnemy() const { return isEnemyLaser;}
 
 private:
   // Speed of the laser
@@ -33,6 +34,7 @@ private:
   float maxDistance = 1000.f;
   // The visible part of the laser
   sf::RectangleShape rectangle;
+  bool isEnemyLaser = false;
 };
 
 #endif

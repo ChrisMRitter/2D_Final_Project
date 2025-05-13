@@ -83,7 +83,9 @@ void EnemyManager::spawnEnemy(const sf::Vector2f& /*playerPos*/) {
     float y   = -50.f;
     int   hp  = hpDist(rng);
     float spd = speedDist(rng);
-    enemies.emplace_back(x, y, spd, hp, enemyTexture, enemyScale);
+    
+    EnemyType type = (baseHealth == 2) ? EnemyType::GREEN_ENEMY : EnemyType::RED_ENEMY;
+    enemies.emplace_back(x, y, spd, hp, enemyTexture, enemyScale, type);
 }
 
 int EnemyManager::getAliveCount() const {

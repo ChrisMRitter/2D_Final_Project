@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <string>
 #include <cmath>
+#include "Level3Manager.h"
+#include "enemyTypes.h"
 
 static std::shared_ptr<sf::Texture> loadTexture(
     const std::string& path,
@@ -99,9 +101,18 @@ int main() {
         600.f);
     std::vector<Laser> lasers;
 
-    auto chaserTex = loadTexture(
+    auto greenEnemyTex = loadTexture(
         "./Assets/Sprites/test_sprites/enemy_green.png");
-    if (!chaserTex) return -1;
+    if (!greenEnemyTex) return -1;
+
+    auto redEnemyTex = loadTexture(
+        "./Assets/Sprites/test_sprites/enemy_red.png");
+    if (!redEnemyTex) return -1;
+
+    auto mothershipTex = loadTexture(
+        "./Assets/Sprites/test_sprites/final_boss.png");
+    if (!mothershipTex) return -1;
+    
 
     auto bgSheet = loadTexture(
         "./Assets/Sprites/test_sprites/terransprite.png");
@@ -110,7 +121,7 @@ int main() {
     animBg.setScaleFactor(0.5f);
 
     LevelManager lvlMgr(
-        &textMgr, &animBg, &player, chaserTex);
+        &textMgr, &animBg, &player, greenEnemyTex, redEnemyTex, mothershipTex);
 
     sf::Music music;
     if (music.openFromFile(
@@ -190,8 +201,8 @@ int main() {
             textMgr.updatePlayerHealth(
                 player.getHealth(), vc, vs);
             textMgr.updateScoreDisplay(vc, vs);
-            textMgr.draw(window);
             textMgr.updateLaserCooldownDisplay(player.getLaserCooldown(), vc, vs);
+            textMgr.draw(window);
 
         }
 

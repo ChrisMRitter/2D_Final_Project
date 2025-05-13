@@ -4,6 +4,7 @@
 
 #include "animatedBackground.h"
 #include "enemyManager.h"
+#include "Level3Manager.h"
 #include "gameconstants.h"
 #include "laser.h"
 #include "player.h"
@@ -15,7 +16,9 @@
 class LevelManager {
 public:
   LevelManager(textManager *textMgr, AnimatedBackground *background,
-               Player *player, std::shared_ptr<sf::Texture> chaserTex);
+               Player *player, std::shared_ptr<sf::Texture> greenEnemyTex,
+              std::shared_ptr<sf::Texture> redEnemyTex,
+              std::shared_ptr<sf::Texture> mothershipTex);
 
   void update(float dt, std::vector<Laser> &lasers);
   void draw(sf::RenderWindow &window);
@@ -30,7 +33,9 @@ private:
   textManager *textMgr;
   AnimatedBackground *bg;
   Player *player;
-  std::shared_ptr<sf::Texture> chaserTexture;
+  std::shared_ptr<sf::Texture> greenEnemyTexture;
+  std::shared_ptr<sf::Texture> redEnemyTexture;
+  std::shared_ptr<sf::Texture> mothershipTexture;
 
   std::vector<std::unique_ptr<EnemyManager>> enemyManagers;
 

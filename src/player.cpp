@@ -82,10 +82,15 @@ void Player::handleInput(float dt, std::vector<Laser> &lasers,
 
 void Player::createLaser(std::vector<Laser> &lasers, sf::Vector2f playerPos,
                          sf::Vector2f fireDirection) {
-  lasers.emplace_back(playerPos.x, playerPos.y, 1000.f, fireDirection);
+  lasers.emplace_back(playerPos.x, playerPos.y, 1000.f, fireDirection, false);
 }
 
 int Player::getHealth() const { return health; }
+
+// Health setter
+void Player::setHealth(int newHealth) {
+  health = newHealth;
+}
 
 void Player::takeDamage(int amount) {
   if (canTakeDamage()) {

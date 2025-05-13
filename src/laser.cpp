@@ -7,10 +7,16 @@
 using namespace sf;
 
 // Constructor
-Laser::Laser(float x, float y, float speed, sf::Vector2f direction) {
+Laser::Laser(float x, float y, float speed, sf::Vector2f direction, bool isEnemy) {
   // Create a red rectangular laser beam
   rectangle = RectangleShape(sf::Vector2f(10.f, 5.f));
-  rectangle.setFillColor(sf::Color::Red);
+
+  if (isEnemy) {
+    rectangle.setFillColor(sf::Color::Yellow); //alien laser is yellow
+    isEnemyLaser = true;
+  } else {
+    rectangle.setFillColor(sf::Color::Red); //player laser is red
+  }
 
   // Center the origin of the rectangle
   rectangle.setOrigin(rectangle.getSize().x / 2, rectangle.getSize().y / 2);

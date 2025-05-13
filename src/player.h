@@ -35,6 +35,9 @@ public:
   sf::FloatRect getGlobalBounds();
   // Get current health
   int getHealth() const;
+
+  // Set health
+  void setHealth(int newHealth);
   // Fire a laser in a given direction
   void createLaser(std::vector<Laser> &lasers, sf::Vector2f playerPos,
                    sf::Vector2f fireDirection);
