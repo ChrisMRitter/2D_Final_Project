@@ -20,7 +20,7 @@ Player::Player(std::string texturePath, float speed) {
   sprite.setOrigin(texture.getSize().x / 2.f, texture.getSize().y / 2.f);
   sprite.setScale(0.5f, 0.5f);
 
-  hitbox = new Hitbox(sf::Vector2f(64.f, 32.f));
+  hitbox = new Hitbox(sf::Vector2f(44.f, 22.f)); // size of hitbox
   this->speed = speed;
 
   if (laserBuffer.loadFromFile("./Assets/Sound/lasersound.mp3")) {
