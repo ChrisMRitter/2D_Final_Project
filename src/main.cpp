@@ -10,6 +10,7 @@
 #include "animatedBackground.h"
 #include "levelManager.h"
 #include "gameconstants.h"
+#include "asteroid.h"
 
 #include <memory>
 #include <vector>
@@ -109,6 +110,10 @@ int main() {
     AnimatedBackground animBg(bgSheet, 6.f);
     animBg.setScaleFactor(0.5f);
 
+    // Load the texture fore the asteroid sprite
+    auto asteroidTex = loadTexture(./Assets/Sprites/test_sprites/PixelSpaceRage/128px/Asteroid01_png_processed.png");
+    if (!asteroidTex) return -1;
+    
     LevelManager lvlMgr(
         &textMgr, &animBg, &player, chaserTex);
 
