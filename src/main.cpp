@@ -11,6 +11,7 @@
 #include "levelManager.h"
 #include "gameconstants.h"
 #include "asteroid.h" // TODO: Asteroid Code
+#include "soundManager.h" // enable sound effects
 
 #include <memory>
 #include <vector>
@@ -135,6 +136,14 @@ int main() {
         music.setVolume(50.f);
         music.play();
     }
+
+    // Load the sound effects
+    SoundManager soundManager;
+    soundManager.loadSound("green_alien_death", "./Assets/Sound/Sounds/greenaliensound.wav");
+    soundManager.loadSound("red_alien_death", "./Assets/Sound/Sounds/redaliensound.wav");
+    soundManager.loadSound("mothership_wounded1", "./Assets/Sound/Sounds/mothershipwounded1.wav");
+    soundManager.loadSound("mothership_wounded2", "./Assets/Sound/Sounds/mothershipwounded2.wav");
+    soundManager.loadSound("mothership_explosion", "./Assets/Sound/Sounds/mothershipexplosion.wav");
 
     sf::Clock clock;
     bool paused = false;

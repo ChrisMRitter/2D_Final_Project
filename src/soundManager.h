@@ -21,10 +21,10 @@ public:
     }
 
     void update() {
-        sounds.erase(std::remove_if(sounds.begin(), sounds.end(),
-             { return sound.getStatus() == sf::Sound::Stopped; }),
-            sounds.end());
-    }
+    sounds.erase(std::remove_if(sounds.begin(), sounds.end(),
+         { return sound.getStatus() == sf::Sound::Stopped; }),
+        sounds.end());
+}
 
 private:
     std::unordered_map<std::string, sf::SoundBuffer> buffers;
