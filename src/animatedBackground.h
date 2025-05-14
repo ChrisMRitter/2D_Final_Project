@@ -21,8 +21,11 @@ public:
 
     // Draw to the given window
     void draw(sf::RenderWindow& window);
+//debugging
+    void debugInfo() const;
 
 private:
+    std::shared_ptr<sf::Texture> texture; //stores texture
     sf::Sprite               sprite;
     std::vector<sf::IntRect> frames;
     float                    frameTime;     // seconds per frame

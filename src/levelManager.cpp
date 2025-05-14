@@ -111,6 +111,8 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
       } else {
         bg->loadSheet(newBg, /*fps=*/60.f);
         bg->setScaleFactor(0.3f);
+
+        bg->debugInfo();
       }
       loadLevel(currentLevel + 1);
     }

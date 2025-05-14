@@ -22,7 +22,7 @@ public:
 
     void update() {
     sounds.erase(std::remove_if(sounds.begin(), sounds.end(),
-         { return sound.getStatus() == sf::Sound::Stopped; }),
+         [](const sf::Sound & sound) { return sound.getStatus() == sf::Sound::Stopped; }),
         sounds.end());
 }
 
