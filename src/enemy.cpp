@@ -59,5 +59,5 @@ sf::FloatRect Enemy::getGlobalBounds() const {
 int Enemy::getHealth() const { return health; }
 void Enemy::setHealth(int h) { health = h; }
 int Enemy::takeDamage() { health--; if (health <= 0) alive = false; return health; }
-void Enemy::killEnemy() { alive = false; }
+void Enemy::killEnemy() { alive = false; } // probably add enemy death sounds here
 bool Enemy::isAlive() const { return alive; }
