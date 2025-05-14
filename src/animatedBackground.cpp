@@ -68,8 +68,9 @@ void AnimatedBackground::draw(sf::RenderWindow &window) {
         std::cout << "Applying scale: " << (baseScale * scaleFactor) 
         << " (baseScale=" << baseScale 
         << ", scaleFactor=" << scaleFactor << ")" << std::endl;
-}
+
 
     // Draw the sprite
     window.draw(sprite);
+}
 }
