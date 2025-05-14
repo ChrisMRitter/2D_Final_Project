@@ -4,7 +4,7 @@ LDFLAGS = -L/opt/homebrew/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml
 
 SRC = src/main.cpp src/player.cpp src/textManager.cpp src/enemyManager.cpp \
       src/enemy.cpp src/laser.cpp src/hitbox.cpp src/animatedBackground.cpp \
-      src/levelManager.cpp src/Level3Manager.cpp src/BulletPattern.cpp
+      src/levelManager.cpp src/Level3Manager.cpp src/BulletPattern.cpp src/asteroid.cpp
 OBJ = $(SRC:.cpp=.o)
 TARGET = game
 
