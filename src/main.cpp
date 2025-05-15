@@ -1,8 +1,10 @@
+// Include SFML modules for graphics, window events, mouse input, and audio
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <SFML/Audio.hpp>
 
+// Include custom game modules
 #include "enemyManager.h"
 #include "laser.h"
 #include "player.h"
@@ -11,12 +13,14 @@
 #include "levelManager.h"
 #include "gameconstants.h"
 
+// Include standard library headers
 #include <memory>
 #include <vector>
 #include <algorithm>
 #include <string>
 #include <cmath>
 
+// Utility function to load a texture from a file, optionally using a sub-rectangle
 static std::shared_ptr<sf::Texture> loadTexture(
     const std::string& path,
     const sf::IntRect& rect = sf::IntRect())
@@ -30,6 +34,7 @@ static std::shared_ptr<sf::Texture> loadTexture(
     return tex;
 }
 
+// Displays the start screen with a prompt to press Enter
 static void startScreen(sf::RenderWindow& window,
                         const sf::Font& font)
 {
@@ -55,6 +60,7 @@ static void startScreen(sf::RenderWindow& window,
     }
 }
 
+// Displays the game over screen with a prompt to press Escape to quit
 static void gameOverScreen(sf::RenderWindow& window,
                            const sf::Font& font)
 {
@@ -80,38 +86,47 @@ static void gameOverScreen(sf::RenderWindow& window,
 }
 
 int main() {
+    // Create the main game window
     sf::RenderWindow window(
         sf::VideoMode((int)VIEW_WIDTH, (int)VIEW_HEIGHT),
         "Space Defender");
     window.setFramerateLimit(60);
 
+    // Load font for text rendering
     sf::Font font;
     if (!font.loadFromFile(
         "./Assets/Fonts/VeniteAdoremus-rgRBA.ttf")) return -1;
+    // Initialize text manager with the same font
     textManager textMgr;
     textMgr.loadFont(
         "./Assets/Fonts/VeniteAdoremus-rgRBA.ttf");
 
+    // Show the start screen
     startScreen(window, font);
 
+    // Initialize player with sprite and speed
     Player player(
         "./Assets/Sprites/test_sprites/PixelSpaceRage/128px/PlayerBlue_Frame_01_png_processed.png",
         600.f);
-    std::vector<Laser> lasers;
+    std::vector<Laser> lasers; // Container for player lasers
 
+    // Load enemy texture
     auto chaserTex = loadTexture(
         "./Assets/Sprites/test_sprites/enemy_green.png");
     if (!chaserTex) return -1;
 
+    // Load background sprite sheet and initialize animated background
     auto bgSheet = loadTexture(
         "./Assets/Sprites/test_sprites/terransprite.png");
     if (!bgSheet) return -1;
     AnimatedBackground animBg(bgSheet, 6.f);
     animBg.setScaleFactor(0.5f);
 
+    // Initialize level manager with references to game components
     LevelManager lvlMgr(
         &textMgr, &animBg, &player, chaserTex);
 
+    // Load and play background music
     sf::Music music;
     if (music.openFromFile(
         "./Assets/Sound/bgmusic.mp3")) {
@@ -120,14 +135,17 @@ int main() {
         music.play();
     }
 
-    sf::Clock clock;
+    sf::Clock clock; // For tracking delta time
     bool paused = false;
+    
+    // Text to display when game is paused
     sf::Text pauseText("Paused - Press P to Resume", font, 24);
     pauseText.setFillColor(sf::Color::White);
     { auto b = pauseText.getLocalBounds();
       pauseText.setOrigin(b.width/2.f, b.height/2.f);
       pauseText.setPosition(window.getView().getCenter()); }
 
+    // Main game loop
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -138,6 +156,7 @@ int main() {
                 paused = !paused;
                 if (paused) window.setView(window.getDefaultView());
             } else if (event.type == sf::Event::Resized) {
+                // Adjust view to maintain aspect ratio
                 float winA  = (float)event.size.width / event.size.height;
                 float viewA = VIEW_WIDTH / VIEW_HEIGHT;
                 sf::View v = window.getView();
@@ -149,6 +168,7 @@ int main() {
             }
         }
 
+        // Handle pause state
         if (paused) {
             window.clear();
             window.draw(pauseText);
@@ -156,34 +176,39 @@ int main() {
             continue;
         }
 
+        // Check for game over
         if (player.getHealth() <= 0) {
             gameOverScreen(window, font);
             break;
         }
 
+        // Calculate delta time and clamp it
         float dt = clock.restart().asSeconds();
         if (dt > 0.1f) dt = 0.1f;
 
+        // Update game objects
         animBg.update(dt);
         sf::Vector2f mouseWorld = window.mapPixelToCoords(
             sf::Mouse::getPosition(window));
         player.update(dt, lasers, mouseWorld);
         for (auto& l : lasers) l.update(dt);
-
         lvlMgr.update(dt, lasers);
 
+        // Remove lasers that are out of bounds
         lasers.erase(
             std::remove_if(
                 lasers.begin(), lasers.end(),
                 [](Laser& l){ return l.isOutOfBounds(); }),
             lasers.end());
 
+        // Render everything
         window.clear();
         animBg.draw(window);
         lvlMgr.draw(window);
         player.draw(window);
         for (auto& l : lasers) l.draw(window);
 
+        // Draw UI if not in cutscene
         if (!lvlMgr.isCutsceneActive()) {
             auto vc = window.getView().getCenter();
             auto vs = window.getView().getSize();
