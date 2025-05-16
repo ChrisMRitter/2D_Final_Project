@@ -1,5 +1,4 @@
 // src/Level3Manager.cpp
-
 #include "Level3Manager.h"
 #include "hitbox.h"
 #include "gameconstants.h"
@@ -8,6 +7,10 @@
 #include <random>
 #include <algorithm>
 
+/*
+Level3Manager extends EnemyManager to implement a boss fight scenario
+featuring enemy squads and a mothership with bullet-hell attack patterns.
+*/
 Level3Manager::Level3Manager() 
     : mothershipPhaseActive(false),
       mothershipLaserCooldown(1.5f),
@@ -183,12 +186,14 @@ void Level3Manager::handlePlayerCollisions(Player& player, int damage) {
     // (This would be handled in the LevelManager)
 }
 
+// Checks if all squads have been spawned and defeated
 bool Level3Manager::areAllSquadsDefeated() const {
     return squadsSpawned >= maxSquads && 
            std::all_of(enemies.begin(), enemies.end(), 
                       [](const Enemy& e) { return e.getType() == EnemyType::MOTHERSHIP; });
 }
 
+// Returns whether the mothership has been defeated
 bool Level3Manager::isMothershipDefeated() const {
     // Check if mothership is in enemies list and not alive
     return mothershipPhaseActive && 
@@ -196,6 +201,7 @@ bool Level3Manager::isMothershipDefeated() const {
                        [](const Enemy& e) { return e.getType() == EnemyType::MOTHERSHIP; });
 }
 
+// Checks if the mothership can fire based on cooldown
 bool Level3Manager::canMothershipFireLaser() const {
     // Can fire if mothership phase is active and cooldown has passed
     return mothershipPhaseActive && 
@@ -204,6 +210,7 @@ bool Level3Manager::canMothershipFireLaser() const {
                       [](const Enemy& e) { return e.getType() == EnemyType::MOTHERSHIP; });
 }
 
+// Fires laser(s) at player
 void Level3Manager::fireLaserFromMothership(std::vector<Laser>& lasers, const sf::Vector2f& playerPos) {
     if (!canMothershipFireLaser()) return;
     
@@ -256,6 +263,7 @@ void Level3Manager::fireLaserFromMothership(std::vector<Laser>& lasers, const sf
     }
 }
 
+// Spawns a new enemy squad
 void Level3Manager::spawnSquad() {
     // Spawn a squad of enemies at the top of the screen
     for (int i = 0; i < squadSize; ++i) {
@@ -280,6 +288,7 @@ void Level3Manager::spawnSquad() {
     }
 }
 
+// Updates the visual health bar of the mothership
 void Level3Manager::updateMothershipHealthBar() {
     // Find mothership and update health bar
     for (auto& e : enemies) {
@@ -292,6 +301,7 @@ void Level3Manager::updateMothershipHealthBar() {
     }
 }
 
+// Fires a single laser
 void Level3Manager::fireSingleShot(const sf::Vector2f& pos, const sf::Vector2f& targetPos, std::vector<Laser>& lasers) {
     // Calculate direction towards player
     sf::Vector2f direction = targetPos - pos;
@@ -302,6 +312,7 @@ void Level3Manager::fireSingleShot(const sf::Vector2f& pos, const sf::Vector2f& 
     lasers.emplace_back(pos.x, pos.y, 300.f, direction, true);
 }
 
+// Fires a spread of lasers
 void Level3Manager::fireSpreadPattern(const sf::Vector2f& pos, const sf::Vector2f& targetPos, std::vector<Laser>& lasers) {
     // Calculate base direction towards player
     sf::Vector2f baseDir = targetPos - pos;
@@ -320,6 +331,7 @@ void Level3Manager::fireSpreadPattern(const sf::Vector2f& pos, const sf::Vector2
     }
 }
 
+// Fires lasers in a circular pattern
 void Level3Manager::fireCirclePattern(const sf::Vector2f& pos, std::vector<Laser>& lasers) {
     // Fire 12 shots in a circle
     for (int i = 0; i < 12; i++) {
@@ -329,6 +341,7 @@ void Level3Manager::fireCirclePattern(const sf::Vector2f& pos, std::vector<Laser
     }
 }
 
+// Fires lasers in a grid pattern
 void Level3Manager::fireGridPattern(const sf::Vector2f& pos, std::vector<Laser>& lasers) {
     // Fire a grid of lasers (5 rows x 3 columns)
     for (int row = -2; row <= 2; row++) {
