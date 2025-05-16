@@ -11,6 +11,10 @@
 Level3Manager extends EnemyManager to implement a boss fight scenario
 featuring enemy squads and a mothership with bullet-hell attack patterns.
 */
+
+//Note: Much of this file and Level3Manager.h was AI generated and human edited. I wanted a boss fight but wasn't sure how to implement it. Otherwise, level 3 would've been
+//a slight variation on the other levels
+
 Level3Manager::Level3Manager() 
     : mothershipPhaseActive(false),
       mothershipLaserCooldown(1.5f),
@@ -59,11 +63,11 @@ void Level3Manager::configureLevel3(
     this->squadSize = squadSize;
 
     mothershipHealth = 500;
-    maxMothershipHealth = 500;
+    maxMothershipHealth = 500; // I don't remember why I did this but I'm a little scared to remove it.
 
     mothershipLaserCooldown = 0.3f;
     
-    // Set up distributions for enemy properties
+    // Set up distributions for enemy properties: I got this idea from Claude
     rng = std::mt19937(std::random_device{}());
     hpDist = std::uniform_int_distribution<>(2, 3); // 2 for green, 3 for red
     speedDist = std::uniform_real_distribution<float>(120.f, 140.f); // Range between green and red speeds
@@ -139,6 +143,7 @@ int Level3Manager::handleLaserCollisions(std::vector<Laser>& lasers) {
     int kills = 0;
     
     // Check collisions only with player lasers (not enemy lasers)
+    //A bit excessive for the build we ended up with, but at one point I was planning on making the regular enemies shoot lasers.
     for (auto it = lasers.begin(); it != lasers.end();) {
         // Skip enemy lasers
         if (it->isFromEnemy()) {
@@ -168,7 +173,7 @@ int Level3Manager::handleLaserCollisions(std::vector<Laser>& lasers) {
     
     return kills;
 }
-
+//TODO: Refactor and remove this, use the already implemented code. DRY
 void Level3Manager::handlePlayerCollisions(Player& player, int damage) {
     // Check collisions between player and enemies
     for (auto& e : enemies) {
@@ -182,8 +187,6 @@ void Level3Manager::handlePlayerCollisions(Player& player, int damage) {
         }
     }
     
-    // Check collisions between player and enemy lasers
-    // (This would be handled in the LevelManager)
 }
 
 // Checks if all squads have been spawned and defeated
@@ -212,7 +215,7 @@ bool Level3Manager::canMothershipFireLaser() const {
 
 // Fires laser(s) at player
 void Level3Manager::fireLaserFromMothership(std::vector<Laser>& lasers, const sf::Vector2f& playerPos) {
-    if (!canMothershipFireLaser()) return;
+    if (!canMothershipFireLaser()) return; //error handling
     
     // Find the mothership
     for (auto& e : enemies) {
@@ -223,9 +226,11 @@ void Level3Manager::fireLaserFromMothership(std::vector<Laser>& lasers, const sf
                 bounds.top + bounds.height); //Bottom Y
             
             // Choose a random pattern based on mothership health percentage
+            // Mothership will become more dangerous as it gets damaged
             float healthPercent = (float)e.getHealth() / maxMothershipHealth;
             int patternType = 0;
-                    
+
+            //Note: The math for this section was AI suggested
             if (healthPercent > 0.75f) {
             // Phase 1: Simple aimed shots and occasional spread
                 patternType = (rand() % 10 > 7) ? 1 : 0;
