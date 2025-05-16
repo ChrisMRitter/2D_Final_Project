@@ -3,6 +3,10 @@
 #include <cmath>
 #include <random>
 
+
+//Note: As I did not know how to implement a "bullet hell" style boss, most of this code
+// and BulletPattern.h is AI generated and human edited. Some may repeat existing code in laser.cpp and laser.h
+
 // Constructor: Initializes default bullet pattern and intensity
 BulletPattern::BulletPattern()
     : currentPattern(BulletPatternType::SINGLE_SHOT), intensity(1)
