@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 
+// Constructor: initializes the level manager with references to game systems and assets
 LevelManager::LevelManager(textManager *textMgr, AnimatedBackground *background,
                            Player *player,
                            std::shared_ptr<sf::Texture> greenEnemyTex,
@@ -18,10 +19,11 @@ LevelManager::LevelManager(textManager *textMgr, AnimatedBackground *background,
       redEnemyTexture(std::move(redEnemyTex)),
       mothershipTexture(std::move(mothershipTex)),
       asteroidTexture(std::move(asteroidTex)) {
-  std::srand(static_cast<unsigned>(std::time(nullptr)));
-  loadLevel(1);
+  std::srand(static_cast<unsigned>(std::time(nullptr))); // Seed RNG
+  loadLevel(1); // Start with level 1
 }
 
+// Loads and initializes a specific level
 void LevelManager::loadLevel(int levelNumber) {
   currentLevel = levelNumber;
   totalKills = 0;
@@ -36,28 +38,28 @@ void LevelManager::loadLevel(int levelNumber) {
   else if (levelNumber == 2)
     asteroidSpawnCooldown = 1.5f;
   else
-    asteroidSpawnCooldown = std::numeric_limits<float>::max();
+    asteroidSpawnCooldown = std::numeric_limits<float>::max(); // No asteroids
 
-  setupEnemiesForLevel(levelNumber);
+  setupEnemiesForLevel(levelNumber); // Configure enemies
 
-  // Reset player to bottom-center for the new level
+  // Reset player position and cooldown
   player->setPosition({VIEW_WIDTH / 2.f, VIEW_HEIGHT - 100.f});
-  // Reset the laser cooldown when loading a new level
   player->resetLaserCooldown();
 
-  // Set player health based on level
+  // Adjust player health based on level
   if (levelNumber == 2) {
-    player->setHealth(15); // More health for Level 2
+    player->setHealth(15);
   } else if (levelNumber == 3) {
-    player->setHealth(25); // More health for level 3
+    player->setHealth(25);
   }
 }
 
+// Configures enemy managers based on the level
 void LevelManager::setupEnemiesForLevel(int levelNumber) {
   enemyManagers.clear();
 
   if (levelNumber == 1) {
-    // Level 1: Green Enemies
+    // Green Enemies
     auto mgr = std::make_unique<EnemyManager>();
     mgr->configure(greenEnemyTexture,
                    /*maxEn=*/kChasersToSpawn,
@@ -67,7 +69,7 @@ void LevelManager::setupEnemiesForLevel(int levelNumber) {
                    /*scale=*/0.1f);
     enemyManagers.emplace_back(std::move(mgr));
   } else if (levelNumber == 2) {
-    // Level 2: Red Enemies/Mutants
+    // Red enemies
     auto mgr = std::make_unique<EnemyManager>();
     mgr->configure(redEnemyTexture,
                    /*maxEn=*/kChasersToSpawn,
@@ -77,7 +79,7 @@ void LevelManager::setupEnemiesForLevel(int levelNumber) {
                    /*scale=*/0.15f);
     enemyManagers.emplace_back(std::move(mgr));
   } else if (levelNumber == 3) {
-    // Level 3: Mixed enemies and mothership
+    // Mixed enemies and mothership
     auto level3Mgr = std::make_unique<Level3Manager>();
     level3Mgr->configureLevel3(greenEnemyTexture, redEnemyTexture,
                                mothershipTexture,
@@ -87,13 +89,14 @@ void LevelManager::setupEnemiesForLevel(int levelNumber) {
   }
 }
 
+// Main update loop for the level manager
 void LevelManager::update(float dt, std::vector<Laser> &lasers) {
   // Check if we're in a cutscene or if we have managers to update
   if (enemyManagers.empty() && !cutsceneActive) {
     return; // Nothing to do if no managers and not in cutscene
   }
 
-  // Handle cutscene logic (for level transitions)
+  // Handle cutscene transitions between levels
   if (cutsceneActive) {
     // Drift ship up
     sf::Vector2f pos = player->getPosition();
@@ -102,7 +105,7 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
 
     auto pb = player->getGlobalBounds();
     if (pb.top + pb.height < 0.f) {
-      // Load background for next level
+      // Load new background for next level
       std::string bgPath;
       if (currentLevel == 1) {
         bgPath =
@@ -127,7 +130,7 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
   // Special handling for Level 3
   if (currentLevel == 3) {
     if (enemyManagers.empty())
-      return; // No managers in level 3, nothing to do
+      return;
 
     auto &mgr = *enemyManagers.front();
     auto *level3Mgr = dynamic_cast<Level3Manager *>(&mgr);
@@ -136,21 +139,14 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
       return;
     }
 
-    // Update Level 3 manager
     level3Mgr->update(dt, player->getPosition(), true);
-
-    // Handle collision detection
     int kills = level3Mgr->handleLaserCollisions(lasers);
-
-    // Apply cooldown reduction for Level 3
     if (kills > 0) {
       player->decreaseLaserCooldown(kills);
     }
-
     totalKills += kills;
     textMgr->addScore(kills * 100);
 
-    // Handle player collisions with enemies
     level3Mgr->handlePlayerCollisions(*player, /*damage=*/1);
 
     // Handle enemy laser firing
@@ -158,7 +154,7 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
       level3Mgr->fireLaserFromMothership(lasers, player->getPosition());
     }
 
-    // Handle player collisions with enemy lasers
+    // Handle collisions with enemy lasers
     for (auto it = lasers.begin(); it != lasers.end();) {
       if (!it->isFromEnemy()) {
         // Skip player lasers
@@ -175,18 +171,17 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
       }
     }
 
-    // Check if mothership is defeated
+    // Check for victory
     if (level3Mgr->isMothershipPhaseActive() &&
         level3Mgr->isMothershipDefeated()) {
       // Game won! Handle victory state
       std::cout << "Mothership defeated! Victory!\n";
-      // Could transition to a victory screen or next level
     }
 
     return;
   }
 
-  // Asteroids for Levels 1 & 2
+  // Asteroids spawning for Levels 1 & 2
   asteroidSpawnTimer += dt;
   if (asteroidSpawnTimer >= asteroidSpawnCooldown) {
     float x = static_cast<float>(std::rand() % static_cast<int>(VIEW_WIDTH));
@@ -195,6 +190,7 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
     asteroidSpawnTimer = 0.f;
   }
 
+  // Update and check collisions for asteroids
   for (auto it = asteroids.begin(); it != asteroids.end();) {
     it->update(dt);
     if (it->checkCollision(player->getGlobalBounds())) {
@@ -207,9 +203,9 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
     }
   }
 
-  // Regular handling for Levels 1 & 2 (only reached if not in cutscene)
+  // Regular handling for Levels 1 & 2
   if (enemyManagers.empty())
-    return; // Safety check
+    return;
 
   auto &mgr = *enemyManagers.front();
   chasersSpawned = totalKills + mgr.getAliveCount();
@@ -226,14 +222,14 @@ void LevelManager::update(float dt, std::vector<Laser> &lasers) {
 
   mgr.handlePlayerCollisions(*player, /*damage=*/1);
 
-  // Check if level is complete - New win condition: finish when all chasers are
-  // defeated
+  // Check if level is complete
   if (currentLevel < 3 && totalKills >= kChasersToSpawn) {
     cutsceneActive = true;
-    enemyManagers.clear(); // Clear sprites
+    enemyManagers.clear(); // Clear enemies for transition
   }
 }
 
+// Draws enemies and asteroids (if not in cutscene)
 void LevelManager::draw(sf::RenderWindow &window) {
   if (!cutsceneActive) {
     for (auto &mgr : enemyManagers)
