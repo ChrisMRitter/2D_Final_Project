@@ -39,7 +39,7 @@ Player::Player(std::string texturePath, float speed) {
 Player::~Player() { delete hitbox; }
 
 // Return a reference to the player's hitbox
-const Hitbox &Player::getHitbox() const { return *hitbox; }
+const Hitbox &Player::getHitbox() const { return *hitbox; } // AI-assisted during debugging
 
 // Set the player's position and update the hitbox position
 void Player::setPosition(const sf::Vector2f &pos) {
