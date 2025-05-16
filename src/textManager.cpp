@@ -5,12 +5,14 @@
 #include "textManager.h"
 #include <iostream>
 
-// Constructor
+// Loads a font from the specified path and sets up the player health text
 bool textManager::loadFont(const std::string &path) {
   if (!font.loadFromFile(path)) {
     std::cerr << "Failed to load font: " << path << std::endl;
     return false;
   }
+
+  // Configure player health text appearance
   playerHealthText.setFont(font);
   playerHealthText.setCharacterSize(24);
   playerHealthText.setFillColor(sf::Color::Red);
@@ -18,7 +20,7 @@ bool textManager::loadFont(const std::string &path) {
   return true;
 }
 
-// Function to update the player's health text
+// Updates the player's health display text and positions it near the top center of the screen
 void textManager::updatePlayerHealth(int health, sf::Vector2f viewCenter,
                                      sf::Vector2f viewSize) {
   playerHealthText.setString("Health: " + std::to_string(health));
@@ -27,13 +29,13 @@ void textManager::updatePlayerHealth(int health, sf::Vector2f viewCenter,
       viewCenter.y - viewSize.y / 2.f + 10.f);
 }
 
-// Function to add score
+// Adds a specified amount to the player's score
 void textManager::addScore(int amount) { score += amount; }
 
-// Function to get the score
+//  Returns the current score
 int textManager::getScore() { return score; }
 
-// Function to update the score display
+// Updates the score display text and positions it below the health text
 void textManager::updateScoreDisplay(sf::Vector2f viewCenter,
                                      sf::Vector2f viewSize) {
   scoreText.setFont(font);
@@ -43,28 +45,28 @@ void textManager::updateScoreDisplay(sf::Vector2f viewCenter,
 
   scoreText.setPosition(viewCenter.x - scoreText.getGlobalBounds().width / 2.f,
                         viewCenter.y - viewSize.y / 2.f +
-                            40.f); // below the health
+                            40.f); // 40 pixels from top
 }
 
-// Function to draw the text
+// Draws all text elements (health, score, laser cooldown) to the window
 void textManager::draw(sf::RenderWindow &window) {
   window.draw(playerHealthText);
   window.draw(scoreText);
   window.draw(laserCooldownText);
 }
 
-// Implementation of the updateLaserCooldownDisplay method
+// Updates the laser cooldown display text and positions it below the score
 void textManager::updateLaserCooldownDisplay(float cooldown, sf::Vector2f viewCenter, sf::Vector2f viewSize) {
   laserCooldownText.setFont(font);
   laserCooldownText.setCharacterSize(16);
   laserCooldownText.setFillColor(sf::Color::Yellow);
   
-  // Format the cooldown to show only 2 decimal places
+  // Format the cooldown as fire rate (shots per second), rounded to 2 decimal places
   char buffer[32];
   snprintf(buffer, sizeof(buffer), "Fire Rate: %.2f", 1.0f / cooldown);
   laserCooldownText.setString(buffer);
 
   laserCooldownText.setPosition(
       viewCenter.x - laserCooldownText.getGlobalBounds().width / 2.f,
-      viewCenter.y - viewSize.y / 2.f + 70.f); // below the score
+      viewCenter.y - viewSize.y / 2.f + 70.f); // 70 pixels from top
 }
