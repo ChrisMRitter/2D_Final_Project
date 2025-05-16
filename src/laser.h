@@ -1,6 +1,4 @@
-// The Laser class represents a single laser projectile fired by player or
-// enemies
-
+// The Laser class represents a single laser projectile fired by player or enemies
 #ifndef LASER_H
 #define LASER_H
 #include <SFML/Graphics.hpp>
@@ -8,33 +6,40 @@
 class Laser {
 
 public:
-  // Constructor: x and y are the starting position, speed is the speed of the
-  // laser, and direction is the direction of the laser
+  /*
+  Constructor:
+  - x, y: starting position of the laser
+  - speed: how fast the laser moves
+  - direction: normalized direction vector the laser travels in
+  - isEnemy: whether the laser was fired by an enemy (default is false)
+  */
   Laser(float x, float y, float speed, sf::Vector2f direction, bool isEnemy = false);
-  // Function to update the laser position
+
+  // Updates the laser's position based on its speed and direction
   void update(float dt);
-  // Function to draw the laser
+
+  // Draws the laser to the given render window
   void draw(sf::RenderWindow &window);
-  // Function to get the position of the laser
+
+  // Returns the current position of the laser
   sf::Vector2f getPosition();
-  // Function to check if the laser is out of bounds.
+
+  // Checks if the laser has traveled beyond its maximum allowed distance
   bool isOutOfBounds();
-  // Function to get the global bounds for collision detection
+
+  // Returns the bounding box of the laser for collision detection
   sf::FloatRect getGlobalBounds();
+
+  // Returns true if the laser was fired by an enemy
   bool isFromEnemy() const { return isEnemyLaser;}
 
 private:
-  // Speed of the laser
-  float speed;
-  // Direction of the laser
-  sf::Vector2f direction;
-  // Distance traveled by the laser
-  float distanceTraveled = 0.f;
-  // Maximum distance the laser can travel
-  float maxDistance = 1000.f;
-  // The visible part of the laser
-  sf::RectangleShape rectangle;
-  bool isEnemyLaser = false;
+  float speed; // Speed of the laser
+  sf::Vector2f direction; // Direction the laser is moving
+  float distanceTraveled = 0.f; // Distance the laser has traveled so far
+  float maxDistance = 1000.f; // Maximum distance the laser can travel
+  sf::RectangleShape rectangle; // Visual representation of the laser
+  bool isEnemyLaser = false; // Flag to indicate if the laser is from an enemy
 };
 
 #endif
