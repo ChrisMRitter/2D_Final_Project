@@ -15,6 +15,7 @@ EnemyManager::EnemyManager()
       spawnTimer(0.f) // Time to track spawn intervals
 {
     // Distributions for randomized health and speed
+    //Note: The idae for a distribution-based health system was from Claude
     hpDist    = std::uniform_int_distribution<>(baseHealth, baseHealth);
     speedDist = std::uniform_real_distribution<float>(baseSpeed, baseSpeed);
 }
@@ -97,9 +98,10 @@ void EnemyManager::handlePlayerCollisions(Player& player, int damage) {
 }
 
 // Spawns a new enemy at a random horizontal position above the screen
+// to give the player time to react
 void EnemyManager::spawnEnemy(const sf::Vector2f& /*playerPos*/) {
     int maxX = static_cast<int>(VIEW_WIDTH);
-    float x   = static_cast<float>(std::rand() % maxX); // Random X position
+    float x   = static_cast<float>(std::rand() % maxX); // Random X position: AI-assisted
     float y   = -50.f; // Spawn above the screen
     int   hp  = hpDist(rng); // Randomized health
     float spd = speedDist(rng); // Randomized speed
