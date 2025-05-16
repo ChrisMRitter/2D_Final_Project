@@ -9,30 +9,37 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 
+// Class responsible for managing all on-screen text elements
 class textManager {
 public:
-  // Constructor
+  // Loads a font from the specified file path
   bool loadFont(const std::string &path);
-  // Function to update the player's health text
+
+  // Updates the player's health text and positions it on the screen
   void updatePlayerHealth(int health, sf::Vector2f viewCenter,
                           sf::Vector2f viewSize);
-  // Function to draw the text
+
+  // Draws all managed text elements to the given render window
   void draw(sf::RenderWindow &window);
-  // Function to add to the score
+
+  // Adds a specified amount to the player's score
   void addScore(int amount);
-  // Function to update the score display
+
+  // Updates the score display text and positions it on the screen
   void updateScoreDisplay(sf::Vector2f viewCenter, sf::Vector2f viewSize);
-  // Function to get the score
+
+  // Returns the current score value
   int getScore();
-  // Function to update laser cooldown display
+
+  // Updates the laser cooldown display (shown as fire rate) and positions it
   void updateLaserCooldownDisplay(float cooldown, sf::Vector2f viewCenter, sf::Vector2f viewSize);
 
 private:
-  sf::Font font;
-  sf::Text playerHealthText;
-  int score = 0;
-  sf::Text scoreText;
-  sf::Text laserCooldownText;
+  sf::Font font; // Font used for all text
+  sf::Text playerHealthText; // Text displaying player's health
+  int score = 0; // Player's current score
+  sf::Text scoreText; // Text displaying the score
+  sf::Text laserCooldownText; // Text displaying the laser cooldown
 };
 
 #endif
