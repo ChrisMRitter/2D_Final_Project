@@ -1,8 +1,10 @@
+// Include SFML modules for graphics, window events, mouse input, and audio
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <SFML/Audio.hpp>
 
+// Include custom game modules
 #include "enemyManager.h"
 #include "laser.h"
 #include "player.h"
@@ -14,11 +16,13 @@
 #include "Level3Manager.h"
 #include "enemyTypes.h"
 
+// Standard library includes
 #include <memory>
 #include <vector>
 #include <algorithm>
 #include <string>
 
+// Utility function to load a texture from file, optionally using a sub-rectangle
 static std::shared_ptr<sf::Texture> loadTexture(
     const std::string& path,
     const sf::IntRect& rect = sf::IntRect())
@@ -32,6 +36,7 @@ static std::shared_ptr<sf::Texture> loadTexture(
     return tex;
 }
 
+// Display the start screen with instructions until the player presses Enter
 static void startScreen(sf::RenderWindow& window, const sf::Font& font)
 {
     sf::Text prompt(
@@ -64,6 +69,7 @@ static void startScreen(sf::RenderWindow& window, const sf::Font& font)
     }
 }
 
+// Display the game over screen until the player presses Escape or closes the window
 static void gameOverScreen(sf::RenderWindow& window, const sf::Font& font)
 {
     sf::Text over("Game Over\nPress Esc to Quit", font, 50);
@@ -88,27 +94,29 @@ static void gameOverScreen(sf::RenderWindow& window, const sf::Font& font)
 }
 
 int main() {
+    // Create the main game window
     sf::RenderWindow window(
         sf::VideoMode(static_cast<int>(VIEW_WIDTH), static_cast<int>(VIEW_HEIGHT)),
         "Space Defender");
     window.setFramerateLimit(60);
 
-    // Load font
+    // Load font for UI text
     sf::Font font;
     if (!font.loadFromFile("./Assets/Fonts/VeniteAdoremus-rgRBA.ttf"))
         return -1;
     textManager textMgr;
     textMgr.loadFont("./Assets/Fonts/VeniteAdoremus-rgRBA.ttf");
 
+    // Show the start screen
     startScreen(window, font);
 
-    // Player
+    // Initialize player and laser container
     Player player(
         "./Assets/Sprites/test_sprites/PixelSpaceRage/128px/PlayerBlue_Frame_01_png_processed.png",
         600.f);
     std::vector<Laser> lasers;
 
-    // Enemy textures
+    // Load enemy textures
     auto greenEnemyTex = loadTexture("./Assets/Sprites/test_sprites/enemy_green.png");
     if (!greenEnemyTex) return -1;
     auto redEnemyTex   = loadTexture("./Assets/Sprites/test_sprites/enemy_red.png");
@@ -116,23 +124,23 @@ int main() {
     auto mothershipTex = loadTexture("./Assets/Sprites/test_sprites/final_boss.png");
     if (!mothershipTex) return -1;
 
-    // Background
+    // Load and configure animated background
     auto bgSheet = loadTexture("./Assets/Sprites/test_sprites/terransprite.png");
     if (!bgSheet) return -1;
     AnimatedBackground animBg(bgSheet, 6.f);
     animBg.setScaleFactor(0.5f);
 
-    // Asteroid texture
+    // Load asteroid texture
     auto asteroidTex = loadTexture("./Assets/Sprites/Asteroid 01_png_processed.png");
     if (!asteroidTex) return -1;
 
-    // Level manager (with asteroid support)
+    // Initialize level manager with all game assets
     LevelManager lvlMgr(
         &textMgr, &animBg, &player,
         greenEnemyTex, redEnemyTex, mothershipTex, asteroidTex
     );
 
-    // Music
+    // Load and play background music
     sf::Music music;
     if (music.openFromFile("./Assets/Sound/Music/Cosmic_Assault.mp3")) {
         music.setLoop(true);
@@ -142,6 +150,8 @@ int main() {
 
     sf::Clock clock;
     bool paused = false;
+
+    // Set up pause text
     sf::Text pauseText("Paused - Press P to Resume", font, 24);
     {
         auto b = pauseText.getLocalBounds();
@@ -149,10 +159,11 @@ int main() {
         pauseText.setPosition(window.getView().getCenter());
     }
 
-    // Main loop
+    // Main game loop
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
+            // Handle window close and pause/resume
             if (event.type == sf::Event::Closed ||
                (event.type == sf::Event::KeyPressed &&
                 event.key.code == sf::Keyboard::Escape)) {
@@ -162,6 +173,7 @@ int main() {
                 paused = !paused;
                 if (paused) window.setView(window.getDefaultView());
             } else if (event.type == sf::Event::Resized) {
+                // Adjust view to maintain aspect ratio on resize
                 float winA  = static_cast<float>(event.size.width) / event.size.height;
                 float viewA = VIEW_WIDTH / VIEW_HEIGHT;
                 sf::View v = window.getView();
@@ -173,6 +185,7 @@ int main() {
             }
         }
 
+        // If paused, show pause screen
         if (paused) {
             window.clear();
             window.draw(pauseText);
@@ -180,22 +193,24 @@ int main() {
             continue;
         }
 
+        // If player is dead, show game over screen
         if (player.getHealth() <= 0) {
             gameOverScreen(window, font);
             break;
         }
 
+        // Calculate delta time
         float dt = clock.restart().asSeconds();
         if (dt > 0.1f) dt = 0.1f;
 
+        // Update game objects
         animBg.update(dt);
         sf::Vector2f mouseWorld = window.mapPixelToCoords(sf::Mouse::getPosition(window));
         player.update(dt, lasers, mouseWorld);
         for (auto& l : lasers) l.update(dt);
-
         lvlMgr.update(dt, lasers);
 
-        // Remove off-screen lasers
+        // Remove lasers that are off-screen
         lasers.erase(
             std::remove_if(
                 lasers.begin(), lasers.end(),
@@ -204,13 +219,14 @@ int main() {
             lasers.end()
         );
 
-        // Draw everything
+        // Draw all game elements
         window.clear();
         animBg.draw(window);
         lvlMgr.draw(window);
         player.draw(window);
         for (auto& l : lasers) l.draw(window);
 
+        // Draw UI if not in cutscene
         if (!lvlMgr.isCutsceneActive()) {
             auto vc = window.getView().getCenter();
             auto vs = window.getView().getSize();
